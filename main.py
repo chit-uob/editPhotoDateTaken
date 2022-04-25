@@ -31,7 +31,7 @@ def date_finder(filename):
         year = filename[4:8]
         month = filename[8:10]
         day = filename[10:12]
-    elif re.match("^Screenshot_[0-9]{8}-[0-9]{6}_", filename):
+    elif re.match("^Screenshot_[0-9]{8}-[0-9]{6}", filename):
         year = filename[11:15]
         month = filename[15:17]
         day = filename[17:19]
@@ -57,36 +57,44 @@ def handle_file(file, year, month, day):
         with open(file, "wb") as image_file:
             image_file.write(data.get_file())
             logging.debug(f"successfully replaced image file with metadata")
-
-        # Move the file with pathlib
-        # print(f'will move to {DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}")}')
-        DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/").mkdir(parents=True, exist_ok=True)
-        logging.debug(f'successfully created dir {DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/")}')
-        if not DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}").exists():
-            logging.debug("file does not already exist, moving file to target")
-            file.rename(DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}"))
-        else:
-            logging.debug("file already exist, adding suffix and moving file to target")
-            file.rename(DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.stem}_dup{file.suffix}"))
     except:
-        # logging.warning("faced problem handling file, will try the other method")
+        logging.warning("faced problem handling file, will try the other method")
         # logging.warning(traceback.format_exc())
-        # try:
-        #     pil_image = PilImage.open(file)
-        #     copied_image = pil_image.copy()
-        #     with open(file.parent.joinpath(f"{file.stem}_cpy{file.suffix}"), "wb") as write_file:
-        #         copied_image.save(write_file)
-        #
-        # except:
-        #     logging.warning("second method failed too")
-        #     logging.warning(traceback.format_exc())
-        return
+        try:
+            if file.suffix != ".jpg":
+                logging.warning("This image is not .jpg, we will not try to convert it")
+            pil_image = PilImage.open(file)
+            pil_image = pil_image.convert("RGB")
+            with open(file, "wb") as converted_file:
+                pil_image.save(converted_file)
+            with open(file, "rb") as image_file:
+                data = ExifImage(image_file)
+                logging.debug(f"successfully copied image data")
+            data.datetime_original = f"{year}:{month}:{day} 00:00:00"
+            # print(f"will change {file.name} with {data.datetime_original}")
+            with open(file, "wb") as image_file:
+                image_file.write(data.get_file())
+                logging.debug(f"successfully replaced image file with metadata")
+        except:
+            logging.warning("second method failed too")
+            # logging.warning(traceback.format_exc())
+            return
+
+    # Move the file with pathlib
+    # print(f'will move to {DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}")}')
+    DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/").mkdir(parents=True, exist_ok=True)
+    logging.debug(f'successfully created dir {DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/")}')
+    if not DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}").exists():
+        logging.debug("file does not already exist, moving file to target")
+        file.rename(DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.name}"))
+    else:
+        logging.debug("file already exist, adding suffix and moving file to target")
+        file.rename(DESTINATION_FOLDER.joinpath(f"{year}/{month}/{year}_{month}_{day}/{file.stem}_dup{file.suffix}"))
 
 
 def main():
     logging.debug(f"The source folder is {SOURCE_FOLDER}")
     logging.debug(f"The destination folder is {DESTINATION_FOLDER}")
-    input()
 
     # handle_file(Path(r'D:\All photos\Welcome Scan.jpg'), "2004", "04", "09")
 
