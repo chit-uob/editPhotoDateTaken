@@ -7,7 +7,7 @@ config.read('config.ini')
 SOURCE_FOLDER = Path(config['MAIN']['sourceFolder'])
 
 #regexs
-{"^IMG-[0-9]{8}-WA[0-9]{4}": "IMG-20211202-WA0002.jpg",
+regexs = {"^IMG-[0-9]{8}-WA[0-9]{4}": "IMG-20211202-WA0002.jpg",
 "^Screenshot_[0-9]{8}-[0-9]{6}_": "Screenshot_20200917-150424_FD.jpg",
 "^RDT_[0-9]{8}_": "RDT_20210529_1139097980871380979846723.jpg"}
 
